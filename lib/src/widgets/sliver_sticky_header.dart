@@ -152,9 +152,10 @@ class SliverStickyHeader extends RenderObjectWidget {
     Key? key,
     this.header,
     this.sliver,
-    this.overlapsContent: false,
+    this.overlapsContent = false,
     this.sticky = true,
     this.controller,
+    this.dismissWithTap = true,
   }) : super(key: key);
 
   /// Creates a widget that builds the header of a [SliverStickyHeader]
@@ -168,7 +169,7 @@ class SliverStickyHeader extends RenderObjectWidget {
     Key? key,
     required SliverStickyHeaderWidgetBuilder builder,
     Widget? sliver,
-    bool overlapsContent: false,
+    bool overlapsContent = false,
     bool sticky = true,
     StickyHeaderController? controller,
   }) : this(
@@ -196,6 +197,10 @@ class SliverStickyHeader extends RenderObjectWidget {
   /// Whether to stick the header.
   /// Defaults to true.
   final bool sticky;
+
+  /// Defines whether tapping the header will close the sliver
+  /// Defaults to true.
+  final dismissWithTap;
 
   /// The controller used to interact with this sliver.
   ///
@@ -235,7 +240,7 @@ class SliverStickyHeader extends RenderObjectWidget {
 /// You cannot change the main axis extent of the header in this builder otherwise it could result
 /// in strange behavior.
 @Deprecated('Use SliverStickyHeader.builder instead.')
-class SliverStickyHeaderBuilder extends StatelessWidget {
+class SliverStickyHeaderBuilder extends StatefulWidget {
   /// Creates a widget that builds the header of a [SliverStickyHeader]
   /// each time its scroll percentage changes.
   ///
@@ -247,7 +252,7 @@ class SliverStickyHeaderBuilder extends StatelessWidget {
     Key? key,
     required this.builder,
     this.sliver,
-    this.overlapsContent: false,
+    this.overlapsContent = false,
     this.sticky = true,
     this.controller,
   }) : super(key: key);
@@ -276,14 +281,30 @@ class SliverStickyHeaderBuilder extends StatelessWidget {
   final StickyHeaderController? controller;
 
   @override
+  State<SliverStickyHeaderBuilder> createState() =>
+      _SliverStickyHeaderBuilderState();
+}
+
+class _SliverStickyHeaderBuilderState extends State<SliverStickyHeaderBuilder> {
+  bool shown = true;
+  @override
   Widget build(BuildContext context) {
     return SliverStickyHeader(
-      overlapsContent: overlapsContent,
-      sliver: sliver,
-      sticky: sticky,
-      controller: controller,
-      header: ValueLayoutBuilder<SliverStickyHeaderState>(
-        builder: (context, constraints) => builder(context, constraints.value),
+      overlapsContent: widget.overlapsContent,
+      sliver: shown ? widget.sliver : Container(),
+      sticky: widget.sticky,
+      dismissWithTap: true,
+      controller: widget.controller,
+      header: GestureDetector(
+        onTap: () {
+          setState(() {
+            shown = !shown;
+          });
+        },
+        child: ValueLayoutBuilder<SliverStickyHeaderState>(
+          builder: (context, constraints) =>
+              widget.builder(context, constraints.value),
+        ),
       ),
     );
   }
